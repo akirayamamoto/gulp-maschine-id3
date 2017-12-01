@@ -26,7 +26,8 @@ gulp.task 'clean', (cb) ->
 
 
 
-####### TESTING
+####### TESTING #######
+
 path = require 'path'
 id3 = require './lib/gulp-maschine-id3'
 
@@ -34,9 +35,10 @@ gulp.task 'write-riff', ->
   gulp.src ["wav/**/*.wav"]
     .pipe id3 (file, chunks) ->
       # do something to create data
-      APIC: '/mnt/s3temp/gulp-wav-id3/wav/apic.jpg'
       name: path.basename file.path, '.wav'
       removeUnnecessaryChunks: false
+
+      APIC: '/mnt/s3temp/gulp-wav-id3/wav/apic.jpg'
       vendor: 'Hahaha'
       author: 'Hehehe'
       comment: 'uniuni'

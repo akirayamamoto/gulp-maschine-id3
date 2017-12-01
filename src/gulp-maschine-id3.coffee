@@ -147,6 +147,7 @@ _id3 = (file, data) ->
 # ---------------------------------
 _build_id3_chunk = (data) ->
   # Akira: create more frames here according to data
+  tit2Frame = _build_text_frame 'TIT2', 'Akira TIT2'
   apicFrame = _build_apic_frame data.APIC
   geobFrame = _build_geob_frame data
 
@@ -156,15 +157,38 @@ _build_id3_chunk = (data) ->
     .push 0x00             # flags
 
     # Akira: sum all frame lengths here
-    .pushSyncsafeInt apicFrame.length + geobFrame.length + 1024  # size
-  # return buffer
+    .pushSyncsafeInt tit2Frame.length + apicFrame.length + geobFrame.length + 1024  # size
 
   Buffer.concat [
     header.buf             # ID3v2 header 10 byte
     # Akira list other frames here
+    tit2Frame
     apicFrame
     geobFrame
     Buffer.alloc 1024, 0   # end-mark 4 byte  + reserve area
+  ]
+
+# build ID3 text frame
+#
+# @specName String - ID
+# @text     String - text data
+# @wreturn  Buffer - contents of text frame
+# ---------------------------------
+_build_text_frame = (specName, text) ->
+  if !specName or !text
+    return null
+  encoded = iconv.encode(text, 'utf16')
+  buffer = new Buffer(10)
+  buffer.fill 0
+  buffer.write specName, 0                      # ID of the specified frame
+  buffer.writeUInt32BE encoded.length + 1, 4    #  Size of frame (string length + encoding byte)
+  encBuffer = new Buffer(1)                     #  Encoding (now using UTF-16 encoded w/ BOM)
+  encBuffer.fill 1                              #  UTF-16
+  contentBuffer = new Buffer(encoded, 'binary') #  Text -> Binary encoding for UTF-16 w/ BOM
+  Buffer.concat [
+    buffer
+    encBuffer
+    contentBuffer
   ]
 
 # build ID3 GEOB frame
@@ -214,6 +238,11 @@ _build_geob_frame = (data) ->
   # return buffer
   Buffer.concat [header.buf, contents.buf]
 
+# build ID3 APIC frame
+#
+# @pic     String || Buffer
+# @wreturn Buffer - contents of APIC frame
+# ---------------------------------
 _build_apic_frame = (pic) ->
   try
     apicData = if pic instanceof Buffer == true then new Buffer(pic) else new Buffer(fs.readFileSync(pic, 'binary'), 'binary')
@@ -225,11 +254,9 @@ _build_apic_frame = (pic) ->
       mime_type = 'image/jpeg'
     bContent = new Buffer(mime_type.length + 4)
     bContent.fill 0
-    bContent[mime_type.length + 2] = 0x03
-    #  Front cover
+    bContent[mime_type.length + 2] = 0x03                         #  Front cover
     bContent.write mime_type, 1
-    bHeader.writeUInt32BE apicData.length + bContent.length, 4
-    #  Size of frame
+    bHeader.writeUInt32BE apicData.length + bContent.length, 4    #  Size of frame
     return Buffer.concat([
       bHeader
       bContent
