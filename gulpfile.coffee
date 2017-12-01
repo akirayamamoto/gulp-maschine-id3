@@ -31,10 +31,10 @@ path = require 'path'
 id3 = require './lib/gulp-maschine-id3'
 
 gulp.task 'write-riff', ->
-  gulp.src ["src/**/*.wav"]
+  gulp.src ["wav/**/*.wav"]
     .pipe id3 (file, chunks) ->
       # do something to create data
-      APIC: 'apic.jpg'
+      APIC: '/mnt/s3temp/gulp-wav-id3/wav/apic.jpg'
       name: path.basename file.path, '.wav'
       removeUnnecessaryChunks: false
       vendor: 'Hahaha'
@@ -44,10 +44,10 @@ gulp.task 'write-riff', ->
       types: [
          ['Bass', 'Synth Bass']
        ]
-    .pipe gulp.dest "dist"
+    .pipe gulp.dest 'dist'
 
-gulp.task 'list-riff-src', ->
-  gulp.src ['src/**/*.wav']
+gulp.task 'list-riff-wav', ->
+  gulp.src ['wav/**/*.wav']
     .pipe id3 (file, chunks) ->
       console.info (chunk.id for chunk in chunks)
       # if return null or undefined, file will not be changed.
