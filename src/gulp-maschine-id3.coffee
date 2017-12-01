@@ -163,7 +163,7 @@ _build_id3_chunk = (data) ->
     header.buf             # ID3v2 header 10 byte
     # Akira list other frames here
     apicFrame
-    geobFrame              # GEOB frame
+    geobFrame
     Buffer.alloc 1024, 0   # end-mark 4 byte  + reserve area
   ]
 
