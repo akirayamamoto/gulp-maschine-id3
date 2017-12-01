@@ -1,7 +1,7 @@
 {
-  "name": "gulp-maschine-id3",
+  "name": "gulp-wav-id3",
   "version": "0.0.3",
-  "description": "Gulp plugin for adding maschine-aware metadata chunk to WAVE file.",
+  "description": "Gulp plugin for adding ID3 metadata chunk to WAVE file.",
   "author": {
     "name": "jhorology",
     "email": "jhorology2014@gmail.com",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jhorology/gulp-maschine-id3"
+    "url": "git+https://github.com/akirayamamoto/gulp-wav-id3"
   },
   "keywords": [
     "gulp",
