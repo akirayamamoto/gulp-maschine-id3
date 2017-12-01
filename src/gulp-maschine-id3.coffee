@@ -46,6 +46,7 @@ gutil        = require 'gulp-util'
 _            = require 'underscore'
 riffReader   = require 'riff-reader'
 riffBuilder  = require './riff-builder'
+fs           = require 'fs'
 
 PLUGIN_NAME  = 'maschine-id3'
 
@@ -145,15 +146,23 @@ _id3 = (file, data) ->
 # @wreturn Buffer - contents of ID3 chunk
 # ---------------------------------
 _build_id3_chunk = (data) ->
+  # Akira: create more frames here according to data
+  apicFrame = _build_apic_frame data.APIC
   geobFrame = _build_geob_frame data
+
   header = new BufferBuilder()
     .push 'ID3'            # magic
-    .push [0x04,0x00]      # id3 version 2.4.0
+    .push [0x03,0x00]      # id3 version 2.3.0
     .push 0x00             # flags
-    .pushSyncsafeInt geobFrame.length + 1024  # size
+
+    # Akira: sum all frame lengths here
+    .pushSyncsafeInt apicFrame.length + geobFrame.length + 1024  # size
   # return buffer
+
   Buffer.concat [
     header.buf             # ID3v2 header 10 byte
+    # Akira list other frames here
+    apicFrame
     geobFrame              # GEOB frame
     Buffer.alloc 1024, 0   # end-mark 4 byte  + reserve area
   ]
@@ -205,6 +214,30 @@ _build_geob_frame = (data) ->
   # return buffer
   Buffer.concat [header.buf, contents.buf]
 
+_build_apic_frame = (pic) ->
+  try
+    apicData = if pic instanceof Buffer == true then new Buffer(pic) else new Buffer(fs.readFileSync(pic, 'binary'), 'binary')
+    bHeader = new Buffer(10)
+    bHeader.fill 0
+    bHeader.write 'APIC', 0
+    mime_type = 'image/png'
+    if apicData[0] == 0xff and apicData[1] == 0xd8 and apicData[2] == 0xff
+      mime_type = 'image/jpeg'
+    bContent = new Buffer(mime_type.length + 4)
+    bContent.fill 0
+    bContent[mime_type.length + 2] = 0x03
+    #  Front cover
+    bContent.write mime_type, 1
+    bHeader.writeUInt32BE apicData.length + bContent.length, 4
+    #  Size of frame
+    return Buffer.concat([
+      bHeader
+      bContent
+      apicData
+    ])
+  catch e
+    return e
+  return
 
 _types = (types) ->
   list = []
@@ -222,6 +255,7 @@ _types = (types) ->
 _validate = (data) ->
   for key, value of data
     throw new Error "Unknown data property: [#{key}]" unless key in [
+      'APIC'
       'name'
       'author'
       'vendor'
