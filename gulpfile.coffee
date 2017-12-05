@@ -29,7 +29,7 @@ gulp.task 'clean', (cb) ->
 ####### TESTING #######
 
 path = require 'path'
-id3 = require './lib/gulp-maschine-id3'
+id3 = require './lib/gulp-wav-id3'
 
 gulp.task 'write-riff', ->
   gulp.src ["wav/**/*.wav"]

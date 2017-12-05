@@ -46,7 +46,9 @@ gutil        = require 'gulp-util'
 _            = require 'underscore'
 riffReader   = require 'riff-reader'
 riffBuilder  = require './riff-builder'
+
 fs           = require 'fs'
+iconv        = require 'iconv-lite'
 
 PLUGIN_NAME  = 'maschine-id3'
 

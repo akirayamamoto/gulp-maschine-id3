@@ -1,1 +1,1 @@
-module.exports = require('./lib/gulp-maschine-id3');
+module.exports = require('./lib/gulp-wav-id3');
