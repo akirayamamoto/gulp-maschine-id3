@@ -39,6 +39,9 @@ gulp.task 'write-riff', ->
       removeUnnecessaryChunks: false
 
       APIC: '/mnt/s3temp/gulp-wav-id3/wav/apic.jpg'
+      TIT2: 'Akira Yamamoto'
+      TALB: 'Akira TALB'
+
       vendor: 'Hahaha'
       author: 'Hehehe'
       comment: 'uniuni'

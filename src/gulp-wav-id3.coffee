@@ -1,4 +1,4 @@
-# Gulp plugin for adding maschine metadata to wav file
+# Gulp plugin for adding ID3 metadata to WAV files
 #
 # - API
 #  - id3(data)
@@ -50,7 +50,48 @@ riffBuilder  = require './riff-builder'
 fs           = require 'fs'
 iconv        = require 'iconv-lite'
 
-PLUGIN_NAME  = 'maschine-id3'
+PLUGIN_NAME  = 'wav-id3'
+
+TEXT_FRAMES = [
+  "TALB",
+  "TBPM",
+  "TCOM",
+  "TCON",
+  "TCOP",
+  "TDAT",
+  "TDLY",
+  "TENC",
+  "TEXT",
+  "TFLT",
+  "TIME",
+  "TIT1",
+  "TIT2",
+  "TIT3",
+  "TKEY",
+  "TLAN",
+  "TLEN",
+  "TMED",
+  "TOAL",
+  "TOFN",
+  "TOLY",
+  "TOPE",
+  "TORY",
+  "TOWN",
+  "TPE1",
+  "TPE2",
+  "TPE3",
+  "TPE4",
+  "TPOS",
+  "TPUB",
+  "TRCK",
+  "TRDA",
+  "TRSN",
+  "TRSO",
+  "TSIZ",
+  "TSRC",
+  "TSSE",
+  "TYER"
+]
 
 module.exports = (data) ->
   through.obj (file, enc, cb) ->
@@ -149,9 +190,12 @@ _id3 = (file, data) ->
 # ---------------------------------
 _build_id3_chunk = (data) ->
   # Akira: create more frames here according to data
-  tit2Frame = _build_text_frame 'TIT2', 'Akira TIT2'
+  textFrames = data.filter (f) -> f in TEXT_FRAMES
+  console.info 'textFrames', textFrames
+
+  tit2Frame = _build_text_frame 'TIT2', data.TIT2
   apicFrame = _build_apic_frame data.APIC
-  geobFrame = _build_geob_frame data
+  # geobFrame = _build_geob_frame data
 
   header = new BufferBuilder()
     .push 'ID3'            # magic
@@ -159,14 +203,16 @@ _build_id3_chunk = (data) ->
     .push 0x00             # flags
 
     # Akira: sum all frame lengths here
-    .pushSyncsafeInt tit2Frame.length + apicFrame.length + geobFrame.length + 1024  # size
+    .pushSyncsafeInt tit2Frame.length + apicFrame.length +
+      # geobFrame.length +
+      1024  # size
 
   Buffer.concat [
     header.buf             # ID3v2 header 10 byte
     # Akira list other frames here
     tit2Frame
     apicFrame
-    geobFrame
+    # geobFrame
     Buffer.alloc 1024, 0   # end-mark 4 byte  + reserve area
   ]
 
@@ -246,27 +292,25 @@ _build_geob_frame = (data) ->
 # @wreturn Buffer - contents of APIC frame
 # ---------------------------------
 _build_apic_frame = (pic) ->
-  try
-    apicData = if pic instanceof Buffer == true then new Buffer(pic) else new Buffer(fs.readFileSync(pic, 'binary'), 'binary')
-    bHeader = new Buffer(10)
-    bHeader.fill 0
-    bHeader.write 'APIC', 0
-    mime_type = 'image/png'
-    if apicData[0] == 0xff and apicData[1] == 0xd8 and apicData[2] == 0xff
-      mime_type = 'image/jpeg'
-    bContent = new Buffer(mime_type.length + 4)
-    bContent.fill 0
-    bContent[mime_type.length + 2] = 0x03                         #  Front cover
-    bContent.write mime_type, 1
-    bHeader.writeUInt32BE apicData.length + bContent.length, 4    #  Size of frame
-    return Buffer.concat([
-      bHeader
-      bContent
-      apicData
-    ])
-  catch e
-    return e
-  return
+  apicData = if pic instanceof Buffer then new Buffer(pic) else
+    new Buffer(fs.readFileSync(pic, 'binary'), 'binary')
+
+  bHeader = new Buffer(10)
+  bHeader.fill 0
+  bHeader.write 'APIC', 0
+  mime_type = 'image/png'
+  if apicData[0] == 0xff and apicData[1] == 0xd8 and apicData[2] == 0xff
+    mime_type = 'image/jpeg'
+  bContent = new Buffer(mime_type.length + 4)
+  bContent.fill 0
+  bContent[mime_type.length + 2] = 0x03                         #  Front cover
+  bContent.write mime_type, 1
+  bHeader.writeUInt32BE apicData.length + bContent.length, 4    #  Size of frame
+  Buffer.concat [
+    bHeader
+    bContent
+    apicData
+  ]
 
 _types = (types) ->
   list = []
