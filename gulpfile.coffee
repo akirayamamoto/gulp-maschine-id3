@@ -1,3 +1,8 @@
+# gulp coffee && gulp write-riff
+
+# gulp list-riff-wav
+# gulp list-riff-dist
+
 gulp        = require 'gulp'
 coffeelint  = require 'gulp-coffeelint'
 coffee      = require 'gulp-coffee'
@@ -18,7 +23,7 @@ gulp.task 'default', ['coffee']
 
 gulp.task 'watch', ->
   gulp.watch './**/*.coffee', ['default']
- 
+
 gulp.task 'clean', (cb) ->
   del ['./lib/*.js', './**/*~'], force: true, cb
 
@@ -39,8 +44,10 @@ gulp.task 'write-riff', ->
       removeUnnecessaryChunks: false
 
       APIC: '/mnt/s3temp/gulp-wav-id3/wav/apic.jpg'
-      TIT2: 'Akira Yamamoto'
-      TALB: 'Akira TALB'
+      TIT2: 'Akira TIT2 408'
+      TALB: 'Akira TALB 407'
+      TCOM: 'Akira TCOM 231'
+      TCON: 'Akira TCON 232'
 
       vendor: 'Hahaha'
       author: 'Hehehe'

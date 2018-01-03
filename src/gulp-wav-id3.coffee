@@ -189,32 +189,42 @@ _id3 = (file, data) ->
 # @wreturn Buffer - contents of ID3 chunk
 # ---------------------------------
 _build_id3_chunk = (data) ->
-  # Akira: create more frames here according to data
-  textFrames = data.filter (f) -> f in TEXT_FRAMES
+  # keep only valid text frames
+  textFrames = _filter_prop data, TEXT_FRAMES
   console.info 'textFrames', textFrames
 
-  tit2Frame = _build_text_frame 'TIT2', data.TIT2
-  apicFrame = _build_apic_frame data.APIC
-  # geobFrame = _build_geob_frame data
+  id3frames = []
+  if data.APIC
+    id3frames.push _build_apic_frame data.APIC
+
+  for key, value of textFrames
+    console.info key
+    id3frames.push _build_text_frame key, value
+
+  # id3frames.push _build_geob_frame data
+
+  console.info 'id3frames.length', id3frames.length
+
+  framesLength = 0
+  for f in id3frames
+    framesLength += f.length
+  # framesLength = id3frames.reduce (total, frame) -> total + frame.length
+
+  console.info 'framesLength', framesLength
 
   header = new BufferBuilder()
     .push 'ID3'            # magic
     .push [0x03,0x00]      # id3 version 2.3.0
     .push 0x00             # flags
 
-    # Akira: sum all frame lengths here
-    .pushSyncsafeInt tit2Frame.length + apicFrame.length +
-      # geobFrame.length +
+    .pushSyncsafeInt framesLength +
       1024  # size
 
-  Buffer.concat [
-    header.buf             # ID3v2 header 10 byte
-    # Akira list other frames here
-    tit2Frame
-    apicFrame
-    # geobFrame
-    Buffer.alloc 1024, 0   # end-mark 4 byte  + reserve area
-  ]
+  frames = [ header.buf ]   # ID3v2 header 10 byte
+    .concat id3frames
+    .concat Buffer.alloc 1024, 0   # end-mark 4 byte + reserve area
+
+  Buffer.concat frames
 
 # build ID3 text frame
 #
@@ -325,20 +335,29 @@ _types = (types) ->
       list.push "\\:#{t[0]}\\:#{t[1]}\\:#{t[2]}"
   _.uniq list
 
+_filter_prop = (validate, filter) ->
+  filtered = {}
+  for key, value of validate
+    if key in filter
+      filtered[key] = value
+  filtered
+
 _validate = (data) ->
   for key, value of data
-    throw new Error "Unknown data property: [#{key}]" unless key in [
-      'APIC'
-      'name'
-      'author'
-      'vendor'
-      'comment'
-      'bankchain'
-      'types'
-      'modes'
-      'syncFilename'
-      'removeUnnecessaryChunks'
-    ]
+    if key not in TEXT_FRAMES and key not in [
+        'APIC'
+        'name'
+        'author'
+        'vendor'
+        'comment'
+        'bankchain'
+        'types'
+        'modes'
+        'syncFilename'
+        'removeUnnecessaryChunks'
+      ]
+        throw new Error "Unknown data property: [#{key}]"
+
     switch key
       when 'name'
         assert.ok _.isString value, "data.name should be String. #{value}"
