@@ -53,43 +53,43 @@ iconv        = require 'iconv-lite'
 PLUGIN_NAME  = 'wav-id3'
 
 TEXT_FRAMES = [
-  "TALB",
-  "TBPM",
-  "TCOM",
-  "TCON",
-  "TCOP",
-  "TDAT",
-  "TDLY",
-  "TENC",
-  "TEXT",
-  "TFLT",
-  "TIME",
-  "TIT1",
-  "TIT2",
-  "TIT3",
-  "TKEY",
-  "TLAN",
-  "TLEN",
-  "TMED",
-  "TOAL",
-  "TOFN",
-  "TOLY",
-  "TOPE",
-  "TORY",
-  "TOWN",
-  "TPE1",
-  "TPE2",
-  "TPE3",
-  "TPE4",
-  "TPOS",
-  "TPUB",
-  "TRCK",
-  "TRDA",
-  "TRSN",
-  "TRSO",
-  "TSIZ",
-  "TSRC",
-  "TSSE",
+  "TALB"
+  "TBPM"
+  "TCOM"
+  "TCON"
+  "TCOP"
+  "TDAT"
+  "TDLY"
+  "TENC"
+  "TEXT"
+  "TFLT"
+  "TIME"
+  "TIT1"
+  "TIT2"
+  "TIT3"
+  "TKEY"
+  "TLAN"
+  "TLEN"
+  "TMED"
+  "TOAL"
+  "TOFN"
+  "TOLY"
+  "TOPE"
+  "TORY"
+  "TOWN"
+  "TPE1"
+  "TPE2"
+  "TPE3"
+  "TPE4"
+  "TPOS"
+  "TPUB"
+  "TRCK"
+  "TRDA"
+  "TRSN"
+  "TRSO"
+  "TSIZ"
+  "TSRC"
+  "TSSE"
   "TYER"
 ]
 
@@ -194,14 +194,16 @@ _build_id3_chunk = (data) ->
   console.info 'textFrames', textFrames
 
   id3frames = []
+
   if data.APIC
-    id3frames.push _build_apic_frame data.APIC
+    id3frames.push _build_picture_frame data.APIC
+
+  if data.COMM
+    id3frames.push _build_comment_frame text: data.COMM
 
   for key, value of textFrames
-    console.info key
+    console.info 'key', key
     id3frames.push _build_text_frame key, value
-
-  # id3frames.push _build_geob_frame data
 
   console.info 'id3frames.length', id3frames.length
 
@@ -249,59 +251,12 @@ _build_text_frame = (specName, text) ->
     contentBuffer
   ]
 
-# build ID3 GEOB frame
-#
-# @data    Object - metadata
-# @wreturn Buffer - contents of GEOB frame
-# ---------------------------------
-_build_geob_frame = (data) ->
-  contents = new BufferBuilder()
-    # unknown, It seems all expansions sample are same.
-    .pushHex '000000'
-    .push 'com.native-instruments.nisound.soundinfo\u0000'
-    # unknown, It seems all expansions sample are same.
-    .pushHex '020000000100000000000000'
-    # sample name
-    .pushUcs2String data.name
-    # author name
-    .pushUcs2String data.author
-    # vendor name
-    .pushUcs2String data.vendor
-    # comment
-    .pushUcs2String data.comment
-    # unknown, It seems all expansions sample are same.
-    .pushHex '00000000ffffffffffffffff000000000000000000000000000000000000000001000000'
-    # bankchain
-    .pushUcs2StringArray data.bankchain
-    # types (category)
-    .pushUcs2StringArray _types data.types
-    # maybe modes ?
-    # .pushUcs2StringArray data.modes
-    .pushHex '00000000'
-    # properties, It seems all expansions sample are same.
-    .pushKeyValuePairs [
-       ['color',           '0']
-       ['devicetypeflags', '0']
-       ['soundtype',       '0']
-       ['tempo',           '0']
-       ['verl',            '1.7.13']
-       ['verm',            '1.7.13']
-       ['visib',           '0']
-    ]
-   # header
-  header = new BufferBuilder()
-    .push 'GEOB'                          # frame Id
-    .pushSyncsafeInt contents.buf.length  # data size
-    .push [0x00, 0x00]                    # flags
-  # return buffer
-  Buffer.concat [header.buf, contents.buf]
-
 # build ID3 APIC frame
 #
 # @pic     String || Buffer
 # @wreturn Buffer - contents of APIC frame
 # ---------------------------------
-_build_apic_frame = (pic) ->
+_build_picture_frame = (pic) ->
   apicData = if pic instanceof Buffer then new Buffer(pic) else
     new Buffer(fs.readFileSync(pic, 'binary'), 'binary')
 
@@ -322,18 +277,48 @@ _build_apic_frame = (pic) ->
     apicData
   ]
 
-_types = (types) ->
-  list = []
-  for t in types
-    if t and t.length and t[0]
-      list.push "\\:#{t[0]}"
-  for t in types
-    if t and t.length > 1 and t[0] and t[1]
-      list.push "\\:#{t[0]}\\:#{t[1]}"
-  for t in types
-    if t and t.length > 2 and t[0] and t[1] and t[2]
-      list.push "\\:#{t[0]}\\:#{t[1]}\\:#{t[2]}"
-  _.uniq list
+# build ID3 COMM frame
+#
+# @comment => object {
+#     language:   string (3 characters),
+#     text:       string
+#     shortText:  string
+# }
+# @wreturn Buffer - contents of COMM frame
+# ---------------------------------
+_build_comment_frame = (comment) ->
+  comment = comment or {}
+  if !comment.text
+    return null
+
+  # Create frame header
+  buffer = new Buffer(10)
+  buffer.fill 0
+  buffer.write 'COMM', 0   # Write header ID
+
+  commentOptions = new Buffer(4)
+  commentOptions.fill 0
+  commentOptions[0] = 0x01   # Encoding bit => UTF-16
+
+  # Make default language eng (english)
+  comment.language = comment.language or 'eng'
+  commentOptions.write comment.language, 1
+
+  commentText = new Buffer(iconv.encode(comment.text, 'utf16'))
+  comment.shortText = comment.shortText or ''
+  commentShortText = iconv.encode(comment.shortText, 'utf16')
+  commentShortText = Buffer.concat([
+    commentShortText
+    if comment.shortText == '' then new Buffer(2).fill(0) else new Buffer(1).fill(0)
+  ])
+  buffer.writeUInt32BE commentOptions.length + commentShortText.length + commentText.length, 4   #  Size of frame
+
+  Buffer.concat [
+    buffer
+    commentOptions
+    commentShortText
+    commentText
+  ]
 
 _filter_prop = (validate, filter) ->
   filtered = {}
@@ -346,47 +331,48 @@ _validate = (data) ->
   for key, value of data
     if key not in TEXT_FRAMES and key not in [
         'APIC'
+        'COMM'
         'name'
-        'author'
-        'vendor'
-        'comment'
-        'bankchain'
-        'types'
-        'modes'
+        # 'author'
+        # 'vendor'
+        # 'comment'
+        # 'bankchain'
+        # 'types'
+        # 'modes'
         'syncFilename'
         'removeUnnecessaryChunks'
       ]
         throw new Error "Unknown data property: [#{key}]"
 
-    switch key
-      when 'name'
-        assert.ok _.isString value, "data.name should be String. #{value}"
-      when 'author'
-        assert.ok _.isString value, "data.author should be String. #{value}"
-      when 'vendor'
-        assert.ok _.isString value, "data.vendor should be String. #{value}"
-      when 'comment'
-        if value
-          assert.ok _.isString value, "data.vendor should be String. #{value}"
-      when 'bankchain'
-        if value
-          assert.ok _.isArray value, "data.bankchain should be Array of String. #{value}"
-          for v in value
-            assert.ok _.isString v, "data.bankchain should be Array of String. #{value}"
-      when 'types'
-        if  value
-          assert.ok _.isArray value, "data.types should be 2 dimensional Array of String. #{value}"
-          for v in value
-            assert.ok _.isArray v, "data.types should be Array of String. #{value}"
-            assert.ok v.length > 0 and v.length <= 3, "data.types lenth of inner array should be 1 - 3. #{value}"
-            for i in v
-              assert.ok _.isString i, "data.types should be 2 dimensional Array of String. #{value}"
-      when 'modes'
-        # optional (currently unused)
-        if  value
-          assert.ok _.isArray value, "data.modess should be Array of String. #{value}"
-          for v in value
-            assert.ok _.isString v, "data.modes should be Array of String. #{value}"
+    # switch key
+    #   when 'name'
+    #     assert.ok _.isString value, "data.name should be String. #{value}"
+    #   when 'author'
+    #     assert.ok _.isString value, "data.author should be String. #{value}"
+    #   when 'vendor'
+    #     assert.ok _.isString value, "data.vendor should be String. #{value}"
+    #   when 'comment'
+    #     if value
+    #       assert.ok _.isString value, "data.vendor should be String. #{value}"
+    #   when 'bankchain'
+    #     if value
+    #       assert.ok _.isArray value, "data.bankchain should be Array of String. #{value}"
+    #       for v in value
+    #         assert.ok _.isString v, "data.bankchain should be Array of String. #{value}"
+    #   when 'types'
+    #     if  value
+    #       assert.ok _.isArray value, "data.types should be 2 dimensional Array of String. #{value}"
+    #       for v in value
+    #         assert.ok _.isArray v, "data.types should be Array of String. #{value}"
+    #         assert.ok v.length > 0 and v.length <= 3, "data.types lenth of inner array should be 1 - 3. #{value}"
+    #         for i in v
+    #           assert.ok _.isString i, "data.types should be 2 dimensional Array of String. #{value}"
+    #   when 'modes'
+    #     # optional (currently unused)
+    #     if  value
+    #       assert.ok _.isArray value, "data.modess should be Array of String. #{value}"
+    #       for v in value
+    #         assert.ok _.isString v, "data.modes should be Array of String. #{value}"
 
 # helper class for building buffer
 # ---------------------------------

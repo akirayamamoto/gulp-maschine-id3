@@ -48,14 +48,15 @@ gulp.task 'write-riff', ->
       TALB: 'Akira TALB 407'
       TCOM: 'Akira TCOM 231'
       TCON: 'Akira TCON 232'
+      COMM: 'Industrial glitched-up dubstep with tough beats, clubby synths and vocal samples.'
 
-      vendor: 'Hahaha'
-      author: 'Hehehe'
-      comment: 'uniuni'
-      bankchain: ['Fugafuga', 'Fugafuga 1.1 Library']
-      types: [
-         ['Bass', 'Synth Bass']
-       ]
+      # vendor: 'Hahaha'
+      # author: 'Hehehe'
+      # comment: 'uniuni'
+      # bankchain: ['Fugafuga', 'Fugafuga 1.1 Library']
+      # types: [
+      #    ['Bass', 'Synth Bass']
+      #  ]
     .pipe gulp.dest 'dist'
 
 gulp.task 'list-riff-wav', ->
