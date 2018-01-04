@@ -5,12 +5,11 @@
 #   - data
 #     object or function to provide data
 #   - data.name          String Optional default: source filename
-#   - data.author        String
-#   - data.vendor        String
-#   - data.comment       String
-#   - data.bankchain     Array of String
-#   - data.types         2 dimensional Array of String
-#   - data.modes         Array of String (currently unsupported)
+#   - data.APIC          String Optional
+#   - data.COMM          String Optional
+#   - data.TALB          String Optional
+#   - data.TCOM          String Optional
+#   - data.TCON          String Optional
 #   - data.syncFilename  bool - use data.name as filenam. default: true
 #   - data.removeUnnecessaryChunks bool - remove all chunks except 'fmt ' or 'data' chunk. default: true
 #   - function(file, chunks[,callback])
@@ -30,13 +29,10 @@
 #       gulp.src ["src/**/*.wav"]
 #         .pipe id3 (file, chunks) ->
 #           name: "Hogehoge"
-#           vendor: "Hahaha"
-#           author: "Hehehe"
-#           comment: "uniuni"
-#           bankchain: ['Fugafuga', 'Fugafuga 1.1 Library']
-#           types: [
-#             ['Bass', 'Synth Bass']
-#           ]
+#           APIC: "/home/user/apic.jpg"
+#           COMM: "My comment"
+#           TALB: "Album title"
+#           TIT2: "Song description"
 #         .pipe gulp.dest "dist"
 #
 assert       = require 'assert'
@@ -113,7 +109,7 @@ module.exports = (data) ->
       cb()
 
     unless file
-      id3 'Files can not be empty'
+      id3 'File can not be empty'
       return
 
     if file.isStream()
@@ -159,24 +155,30 @@ _parseSourceWavChunks = (file) ->
 # @wreturn Buffer - contents of ID3 chunk
 # ---------------------------------
 _id3 = (file, data) ->
+  # console.info 'file.path' file.path
   extname = path.extname file.path
   basename = path.basename file.path, extname
   dirname = path.dirname file.path
+
   # default value
   data = _.defaults data,
     name: basename
     syncFilename: on
-    removeUnnecessaryChunks: on
+    removeUnnecessaryChunks: off
+
   # validate
   _validate data
+
   chunks = if data.removeUnnecessaryChunks
     file.chunks.filter (c) -> c.id in ['fmt ', 'data']
   else
     # remove 'ID3 ' chunk if already exits.
     file.chunks.filter (c) -> c.id isnt 'ID3 '
+
   # rename
   if data.syncFilename
     file.path = path.join dirname, (data.name + extname)
+
   # build wav file
   wav = riffBuilder 'WAVE'
   wav.pushChunk chunk.id, chunk.data for chunk in chunks
@@ -195,13 +197,14 @@ _build_id3_chunk = (data) ->
 
   id3frames = []
 
-  if data.APIC
+  if data.APIC?.length
     id3frames.push _build_picture_frame data.APIC
 
-  if data.COMM
+  if data.COMM?.length
     id3frames.push _build_comment_frame text: data.COMM
 
   for key, value of textFrames
+    continue unless value?.length
     console.info 'key', key
     id3frames.push _build_text_frame key, value
 
@@ -333,46 +336,24 @@ _validate = (data) ->
         'APIC'
         'COMM'
         'name'
-        # 'author'
-        # 'vendor'
-        # 'comment'
-        # 'bankchain'
-        # 'types'
-        # 'modes'
         'syncFilename'
         'removeUnnecessaryChunks'
       ]
         throw new Error "Unknown data property: [#{key}]"
 
+    # NOT WORKING
+    # if key in TEXT_FRAMES
+    #   assert.ok (_.isString value), "data.#{key} should be String. #{value}"
+    #
     # switch key
+    #   when 'APIC'
+    #     assert.ok (_.isString value), "data.APIC should be String. #{value}"
+    #   when 'COMM'
+    #     assert.ok (_.isString value), "data.COMM should be String. #{value}"
     #   when 'name'
-    #     assert.ok _.isString value, "data.name should be String. #{value}"
-    #   when 'author'
-    #     assert.ok _.isString value, "data.author should be String. #{value}"
-    #   when 'vendor'
-    #     assert.ok _.isString value, "data.vendor should be String. #{value}"
-    #   when 'comment'
-    #     if value
-    #       assert.ok _.isString value, "data.vendor should be String. #{value}"
-    #   when 'bankchain'
-    #     if value
-    #       assert.ok _.isArray value, "data.bankchain should be Array of String. #{value}"
-    #       for v in value
-    #         assert.ok _.isString v, "data.bankchain should be Array of String. #{value}"
-    #   when 'types'
-    #     if  value
-    #       assert.ok _.isArray value, "data.types should be 2 dimensional Array of String. #{value}"
-    #       for v in value
-    #         assert.ok _.isArray v, "data.types should be Array of String. #{value}"
-    #         assert.ok v.length > 0 and v.length <= 3, "data.types lenth of inner array should be 1 - 3. #{value}"
-    #         for i in v
-    #           assert.ok _.isString i, "data.types should be 2 dimensional Array of String. #{value}"
-    #   when 'modes'
-    #     # optional (currently unused)
-    #     if  value
-    #       assert.ok _.isArray value, "data.modess should be Array of String. #{value}"
-    #       for v in value
-    #         assert.ok _.isString v, "data.modes should be Array of String. #{value}"
+    #     assert.ok (_.isString value), "data.name should be String. #{value}"
+
+    return
 
 # helper class for building buffer
 # ---------------------------------
