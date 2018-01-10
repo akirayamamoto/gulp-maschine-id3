@@ -49,7 +49,7 @@ gulp.task 'write-wav-id3', ->
   wavPath = undefined
   i = process.argv.indexOf '--wav'
   if i < 0
-    throw new Error "JSON path not specified."
+    throw new Error "WAV path not specified."
   wavPath = process.argv[i + 1]
   console.info 'wavPath', wavPath
 
@@ -57,6 +57,8 @@ gulp.task 'write-wav-id3', ->
     .pipe id3 (file, chunks) ->
       jsonContent
     .pipe gulp.dest (f) -> f.base
+
+
 
 gulp.task 'write-riff', ->
   gulp.src ["wav/**/*.wav"]

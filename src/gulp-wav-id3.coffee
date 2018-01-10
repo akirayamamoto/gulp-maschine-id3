@@ -166,8 +166,7 @@ _id3 = (file, data) ->
     syncFilename: on
     removeUnnecessaryChunks: off
 
-  # validate
-  _validate data
+  # _validate data
 
   chunks = if data.removeUnnecessaryChunks
     file.chunks.filter (c) -> c.id in ['fmt ', 'data']
