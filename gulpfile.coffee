@@ -1,4 +1,5 @@
-# sudo mv /etc/apt/sources.list.d/ondrej-php5-* ~ # should be a rm but I am keeping it as a backup
+# sudo mv /etc/apt/sources.list.d/ondrej-php5-* ~
+# should be a rm but I am keeping it as a backup :)
 
 # curl -sL https://deb.nodesource.com/setup_6.x | sudo bash -
 # sudo apt-get install nodejs
@@ -6,7 +7,7 @@
 
 # cd /var/www/html/s3temp/gulp-wav-id3/
 # npm install
-# gulp coffee && gulp write-wav-id3 --json "/home/ubuntu/json/WOM_SOO_0001_01001.mp3.json" --wav "/var/www/html/s3temp/gulp-wav-id3/wav/WOM_NRF_0001_00101.wav"
+# gulp coffee && gulp write-wav-id3 --json "/home/x/y.json" --wav "/home/x/y.wav"
 # gulp coffee && gulp write-riff
 
 # gulp coffee && gulp list-riff-wav
