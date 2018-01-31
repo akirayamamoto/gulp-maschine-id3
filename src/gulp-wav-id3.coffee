@@ -87,6 +87,15 @@ TEXT_FRAMES = [
   "TSRC"
   "TSSE"
   "TYER"
+  "TMOO"
+]
+
+URL_FRAMES = [
+  "WOAF"
+  "WOAR"
+  "WOAS"
+  "WORS"
+  "WPUB"
 ]
 
 module.exports = (data) ->
@@ -192,7 +201,7 @@ _id3 = (file, data) ->
 _build_id3_chunk = (data) ->
   # keep only valid text frames
   textFrames = _filter_prop data, TEXT_FRAMES
-  console.info 'textFrames', textFrames
+  # urlFrames = _filter_prop data, URL_FRAMES
 
   id3frames = []
 
@@ -201,6 +210,11 @@ _build_id3_chunk = (data) ->
 
   if data.COMM?.length
     id3frames.push _build_comment_frame text: data.COMM
+
+  # for key, value of urlFrames
+  #   continue unless value?.length
+  #   console.info 'key', key
+  #   id3frames.push _build_url_frame key, value
 
   for key, value of textFrames
     continue unless value?.length
@@ -218,7 +232,7 @@ _build_id3_chunk = (data) ->
 
   header = new BufferBuilder()
     .push 'ID3'            # magic
-    .push [0x03,0x00]      # id3 version 2.3.0
+    .push [0x04,0x00]      # id3 version 2.4.0
     .push 0x00             # flags
 
     .pushSyncsafeInt framesLength +
@@ -252,6 +266,33 @@ _build_text_frame = (specName, text) ->
     encBuffer
     contentBuffer
   ]
+
+# build ID3 URL frame
+#
+# @specName String - ID
+# @text     String - text data
+# @wreturn  Buffer - contents of text frame
+# ---------------------------------
+# _build_url_frame = (specName, text) ->
+#   if !specName or !text
+#     return null
+#   encoded = iconv.encode(text, 'ascii')
+#   buffer = new Buffer(10)
+#   buffer.fill 0
+#   buffer.write specName, 0                      # ID of the specified frame
+#   buffer.writeUInt32BE encoded.length, 4        #  Size of frame (string length)
+#   contentBuffer = new Buffer(encoded, 'binary') #  Text -> Binary encoding for UTF-16 w/ BOM
+#   Buffer.concat [
+#     buffer
+#     contentBuffer
+#   ]
+
+#   buffer = new Buffer(10)
+#   buffer.fill 0
+#   buffer.write specName, 0                      # ID of the specified frame
+#   buffer.writeUInt32BE text.length, 4           #  Size of frame (string length)
+#   buffer.write text
+#   buffer
 
 # build ID3 APIC frame
 #
@@ -331,7 +372,7 @@ _filter_prop = (validate, filter) ->
 
 _validate = (data) ->
   for key, value of data
-    if key not in TEXT_FRAMES and key not in [
+    if key not in TEXT_FRAMES and key not in URL_FRAMES and key not in [
         'APIC'
         'COMM'
         'name'
