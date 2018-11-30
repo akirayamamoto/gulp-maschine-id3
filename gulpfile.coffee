@@ -1,9 +1,11 @@
 # sudo mv /etc/apt/sources.list.d/ondrej-php5-* ~
 # should be a rm but I am keeping it as a backup :)
 
-# curl -sL https://deb.nodesource.com/setup_6.x | sudo bash -
-# sudo apt-get install nodejs
-# sudo npm install --global gulp
+# curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+# sudo apt-get install -y nodejs
+# sudo npm install -g gulp
+# sudo npm install
+# sudo npm install natives
 
 # cd /var/www/html/s3temp/gulp-wav-id3/
 # npm install
