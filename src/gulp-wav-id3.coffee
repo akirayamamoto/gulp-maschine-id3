@@ -370,30 +370,30 @@ _filter_prop = (validate, filter) ->
       filtered[key] = value
   filtered
 
-_validate = (data) ->
-  for key, value of data
-    if key not in TEXT_FRAMES and key not in URL_FRAMES and key not in [
-        'APIC'
-        'COMM'
-        'name'
-        'syncFilename'
-        'removeUnnecessaryChunks'
-      ]
-        throw new Error "Unknown data property: [#{key}]"
+# _validate = (data) ->
+#   for key, value of data
+#     if key not in TEXT_FRAMES and key not in URL_FRAMES and key not in [
+#         'APIC'
+#         'COMM'
+#         'name'
+#         'syncFilename'
+#         'removeUnnecessaryChunks'
+#       ]
+#         throw new Error "Unknown data property: [#{key}]"
 
-    # NOT WORKING
-    # if key in TEXT_FRAMES
-    #   assert.ok (_.isString value), "data.#{key} should be String. #{value}"
-    #
-    # switch key
-    #   when 'APIC'
-    #     assert.ok (_.isString value), "data.APIC should be String. #{value}"
-    #   when 'COMM'
-    #     assert.ok (_.isString value), "data.COMM should be String. #{value}"
-    #   when 'name'
-    #     assert.ok (_.isString value), "data.name should be String. #{value}"
+#     # NOT WORKING
+#     # if key in TEXT_FRAMES
+#     #   assert.ok (_.isString value), "data.#{key} should be String. #{value}"
+#     #
+#     # switch key
+#     #   when 'APIC'
+#     #     assert.ok (_.isString value), "data.APIC should be String. #{value}"
+#     #   when 'COMM'
+#     #     assert.ok (_.isString value), "data.COMM should be String. #{value}"
+#     #   when 'name'
+#     #     assert.ok (_.isString value), "data.name should be String. #{value}"
 
-    return
+#     return
 
 # helper class for building buffer
 # ---------------------------------
