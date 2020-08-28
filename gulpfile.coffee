@@ -26,12 +26,12 @@ gulp.task 'coffeelint', ->
     .pipe coffeelint './coffeelint.json'
     .pipe coffeelint.reporter()
 
-gulp.task 'coffee', ['coffeelint'], ->
+gulp.task 'coffee', gulp.series ('coffeelint'), ->
   gulp.src ['./src/*.coffee']
     .pipe coffee()
     .pipe gulp.dest './lib'
 
-gulp.task 'default', ['coffee']
+gulp.task 'default', gulp.series ('coffee')
 
 gulp.task 'watch', ->
   gulp.watch './**/*.coffee', ['default']
