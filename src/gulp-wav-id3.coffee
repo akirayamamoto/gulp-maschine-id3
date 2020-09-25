@@ -203,6 +203,8 @@ _build_id3_chunk = (data) ->
   textFrames = _filter_prop data, TEXT_FRAMES
   # urlFrames = _filter_prop data, URL_FRAMES
 
+  console.info 'textFrames', textFrames
+
   id3frames = []
 
   if data.APIC?.length
