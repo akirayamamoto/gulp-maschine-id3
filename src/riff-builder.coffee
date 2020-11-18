@@ -73,9 +73,9 @@ class RIFFBuilder
     @
 
   _pushId: (value) ->
-    assert.ok (_.isString value), "Id msut be string. id:#{value}"
+    assert.ok (_.isString value), "Id must be string. id:#{value}"
     b = new Buffer value, 'ascii'
-    assert.ok (b.length is 4), "Id msut be 4 characters string. id:#{value}"
+    assert.ok (b.length is 4), "Id must be 4 characters string. id:#{value}"
     @_push b
     @
 
