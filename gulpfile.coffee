@@ -7,8 +7,12 @@
 # sudo npm install
 # sudo npm install natives
 
-# cd /var/www/html/s3temp/gulp-wav-id3/
+# cd /var/www/html/cron/hmp/gulp-wav-id3/
 # npm install
+
+# cd /var/www/html/cron/hmp/gulp-wav-id3 && gulp write-wav-id3 --json "test-data-TSH_162_trk001.wav.json" --wav "test-data.wav" 2>&1
+# mediainfo test-data.wav
+
 # gulp coffee && gulp write-wav-id3 --json "/home/x/y.json" --wav "/home/x/y.wav"
 # gulp coffee && gulp write-riff
 
