@@ -234,7 +234,8 @@ _build_id3_chunk = (data) ->
 
   header = new BufferBuilder()
     .push 'ID3'            # magic
-    .push [0x04,0x00]      # id3 version 2.4.0
+    .push [0x03,0x00]      # id3 version 2.3.0
+    # .push [0x04,0x00]      # id3 version 2.4.0
     .push 0x00             # flags
 
     .pushSyncsafeInt framesLength +
